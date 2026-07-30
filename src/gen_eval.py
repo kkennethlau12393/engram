@@ -117,6 +117,23 @@ def rag_prompt(item, k):
     return "".join(parts)
 
 
+def check_rag_fits(lm, items, rag_k):
+    """A truncated RAG prompt is not a weaker baseline, it is no baseline. Fail
+    loudly rather than publishing a number that only measures truncation."""
+    over = []
+    for it in items:
+        ids, _ = lm.encode(rag_prompt(it, rag_k))
+        full = len(lm.tokenizer.encode(rag_prompt(it, rag_k)))
+        if full > lm.max_len:
+            over.append(full)
+    if over:
+        raise SystemExit(
+            f"{len(over)}/{len(items)} RAG prompts exceed max_len={lm.max_len} "
+            f"(largest {max(over)}). encode() keeps the tail, so the retrieved "
+            f"examples would be deleted and this would measure the base model, "
+            f"not retrieval. Raise --max-len-rag to >= {max(over) + 128}.")
+
+
 def evaluate(lm, items, label, max_tokens, show=0, rag_k=0):
     n = len(items)
     ok_json = tool_hit = exact = 0
@@ -175,9 +192,11 @@ def main():
                          "memories into context and uses the BASE model -- the "
                          "stateless-context comparison the premise rests on.")
     ap.add_argument("--rag-k", type=int, default=5)
-    ap.add_argument("--max-len-rag", type=int, default=2048,
-                    help="RAG prompts are far longer; give them room or the "
-                         "comparison is rigged by truncation")
+    ap.add_argument("--max-len-rag", type=int, default=6144,
+                    help="RAG prompts run 2.3k-4.9k tokens with k=5. encode() keeps "
+                         "the TAIL, so an undersized budget silently deletes every "
+                         "retrieved example and the baseline degenerates to the bare "
+                         "base model. Measured, not guessed: 2048 truncated 64/64.")
     args = ap.parse_args()
 
     if args.rag:
@@ -208,8 +227,9 @@ def main():
     print(f"\n{tag}   project={args.project}  tracked={len(tracked)} held={len(held)}")
     k = args.rag_k if args.rag else 0
     if args.rag:
+        check_rag_fits(lm, tracked + held, k)
         tag += f" + RAG k={k} (base weights, memories in context)"
-        print(f"  {tag}")
+        print(f"  {tag}  [all prompts fit within max_len={lm.max_len}]")
     r_tr, samples = evaluate(lm, tracked, "tracked (written)", args.max_tokens,
                              show=args.show, rag_k=k)
     r_hd, _ = evaluate(lm, held, "held (never written)", args.max_tokens, rag_k=k)

@@ -1,0 +1,41 @@
+{
+  "state": "adapters/intf-r00.safetensors",
+  "tracked": {
+    "label": "tracked (written)",
+    "n": 32,
+    "parseable": 1.0,
+    "tool_acc": 0.09375,
+    "exact": 0.0,
+    "bash_f1": 0.0,
+    "n_bash": 23,
+    "secs": 61.30228519439697
+  },
+  "held": {
+    "label": "held (never written)",
+    "n": 32,
+    "parseable": 1.0,
+    "tool_acc": 0.15625,
+    "exact": 0.03125,
+    "bash_f1": 0.03571428571428571,
+    "n_bash": 21,
+    "secs": 66.71600914001465
+  },
+  "config": {
+    "model": "mlx-community/Qwen3-1.7B-4bit",
+    "project": "repo-a",
+    "state": "adapters/intf-r00.safetensors",
+    "n": 400,
+    "n_probe": 32,
+    "n_held": 32,
+    "seed": 13,
+    "rank": 8,
+    "num_layers": 8,
+    "max_len": 512,
+    "max_tokens": 96,
+    "show": 3,
+    "name": "gen-intf-r00",
+    "rag": null,
+    "rag_k": 5,
+    "max_len_rag": 6144
+  }
+}

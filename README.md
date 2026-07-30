@@ -2,7 +2,9 @@
 
 **A language model whose memory lives in its weights, not its context window.**
 
-A normal LLM is stateless. The context window is a buffer that gets wiped between sessions, so every session re-derives everything from scratch. Retrieval-augmented memory does not change this — it just refills the buffer, paying tokens on every turn and capped by whatever the retriever happens to find.
+A normal LLM is stateless. The context window is a buffer that gets wiped between sessions, so every session re-derives everything from scratch. Retrieval-augmented memory does not remove that — it refills the buffer, paying tokens on every turn.
+
+This repo tests whether putting the memory in the weights instead is better. **At the scale measured here, it is not: retrieval wins on accuracy** (see below). What parametric state does buy is recall at zero context cost, and a scaling curve that does not depend on a retriever's recall. Both results are reported.
 
 `engram` makes the LoRA itself the state:
 
@@ -22,7 +24,7 @@ Named for the *engram*: the physical trace a memory leaves in tissue.
 
 ## Does it actually work?
 
-Yes, with one significant defect. Everything below is measured, and the negative results are included because they are the useful part.
+It works as a mechanism — memory in weights is real, measurable, and behaviour-changing. It loses to retrieval on accuracy at this scale. Everything below is measured; the negative results are the useful part.
 
 ### Memory is real
 
@@ -62,7 +64,7 @@ A single gradient step measurably encodes an experience — 16/16 tracked items 
 
 The first null was pure data sparsity — you cannot conclude a model failed to learn something it saw six times. With real exposure the convention sticks. It also conditions correctly on `cwd`, emitting the right per-repo file paths.
 
-This is the part retrieval cannot easily do. No file anywhere says "this repo uses bun, narrow the test file before running the suite." That knowledge exists only smeared across hundreds of transcripts — nothing to fetch, but weights can hold it.
+This is the case where weights *might* have a structural edge: no file anywhere says "this repo uses bun, narrow the test file before running the suite." That knowledge exists only smeared across hundreds of transcripts, so there is no single document to fetch. **Untested against retrieval, though** — the head-to-head below used general held-out prompts, not the convention task. Treat it as a hypothesis, not a finding.
 
 ### Capability survives
 
@@ -78,13 +80,28 @@ Write 400 experiences from repo A, then 400 from unrelated repo B, then test on 
 
 ```
 prompt: a repo-A task
-pred:   {"tool": "Rociletinib", "input": {"drug_id": 1017037, ...}}
-pred:   {"tool": "WebSearch", "input": {"query": "…indications …indications …indications"}}
+pred:   {"tool": "<a domain noun from repo B>", "input": {"record_id": 1017037, ...}}
+pred:   {"tool": "WebSearch", "input": {"query": "…<repo-B topic> …<repo-B topic> …"}}
 ```
+
+It invents tool names that do not exist, lifted from repo B's subject matter, and
+loops. Not degraded output — different output.
 
 **The methodological lesson is the most transferable result here: for a stateful system, teacher-forced loss is not a sufficient measure of retention.** It reported 84% survival on a state that was functionally destroyed. Any conclusion drawn from loss alone needs a generation check.
 
-Mitigations implemented and under test: a replay buffer (`--replay-frac`) and `cwd`-keyed state routing.
+**A replay buffer fixes it.** Interleaving 30% replayed own-repo experiences during
+foreign writes (`--replay-frac 0.3`, replay pool excluding the measured probes so
+survival cannot be faked):
+
+| after 400 foreign writes | tool accuracy | bashF1 |
+|---|---|---|
+| replay 0% | **0.094** — collapsed | 0.000 |
+| replay 30% | **0.719** — rescued | 0.221 |
+| (no interference at all) | 0.844 | 0.214 |
+
+Tool accuracy falls 84% -> 9% without replay, and the loss curve for that same run
+reported the memory gap *widening* to +0.219. Loss saw none of an 89% relative
+collapse in behaviour.
 
 ### Stable operating point
 
@@ -96,9 +113,36 @@ Mitigations implemented and under test: a replay buffer (`--replay-frac`) and `c
 
 The diverged run is instructive: it showed the *largest* apparent memory effect (+0.921) because both conditions had degraded and written ones degraded slightly less. A gap between two broken numbers is not a result — which is exactly why the control exists.
 
-### Still open
+### Retrieval beats this, on quality
 
-The comparison the whole premise rests on: **parametric state vs retrieval, same memories, same items.** Retrieval hands the model the literal past text while a gradient step smears it across 2.5M parameters, so retrieval may well win on specific recall. Harness is built (`retrieve.py` + `gen_eval --rag`), result pending.
+The comparison the premise rests on: same 400 memories, same test items, same base
+model — once delivered as weights, once as context (k=5, MiniLM retrieval).
+
+```
+                 tool accuracy        bash command F1
+              tracked   held        tracked   held
+base            0.000   0.000         0.000   0.000
+parametric      0.844   0.719         0.214   0.155
+retrieval       0.875   0.844         0.584   0.473
+```
+
+**Retrieval wins on every metric.** Held items are the fair test — those retrieve
+different experiences (similarity 0.751), not themselves — and retrieval still
+leads 0.844 vs 0.719 on tool choice and **0.473 vs 0.155 on the actual command,
+3x better.**
+
+| | quality | context cost | write cost | interference |
+|---|---|---|---|---|
+| parametric | lower | **0 tokens** | 1.70 s/write | high, needs replay |
+| retrieval | **higher** | ~1,700 tok/query | none | none |
+
+Parametric memory's one real edge is that recall is free at inference. It pays
+with lower accuracy, a write per interaction, and a failure mode to defend.
+
+Two untested caveats before writing the idea off: this is 400 memories on a 1.7B
+model. Retrieval degrades as the corpus grows and retriever recall falls, while
+weights have no such scaling term — and at 109K memories the per-query context
+cost becomes the binding constraint rather than a rounding error.
 
 ---
 

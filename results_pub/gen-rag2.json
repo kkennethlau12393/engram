@@ -1,0 +1,41 @@
+{
+  "state": null,
+  "tracked": {
+    "label": "tracked (written)",
+    "n": 32,
+    "parseable": 1.0,
+    "tool_acc": 0.875,
+    "exact": 0.375,
+    "bash_f1": 0.5840661145925172,
+    "n_bash": 23,
+    "secs": 153.59441995620728
+  },
+  "held": {
+    "label": "held (never written)",
+    "n": 32,
+    "parseable": 1.0,
+    "tool_acc": 0.84375,
+    "exact": 0.125,
+    "bash_f1": 0.4729182461524826,
+    "n_bash": 21,
+    "secs": 155.722718000412
+  },
+  "config": {
+    "model": "mlx-community/Qwen3-1.7B-4bit",
+    "project": "repo-a",
+    "state": null,
+    "n": 400,
+    "n_probe": 32,
+    "n_held": 32,
+    "seed": 13,
+    "rank": 8,
+    "num_layers": 8,
+    "max_len": 512,
+    "max_tokens": 96,
+    "show": 3,
+    "name": "gen-rag2",
+    "rag": "data/rag/rag-repo-a.jsonl",
+    "rag_k": 5,
+    "max_len_rag": 6144
+  }
+}
