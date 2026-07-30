@@ -1,0 +1,15 @@
+# Extracted transcripts and derived datasets. ~1 GB, and they contain the
+# verbatim contents of your Claude Code sessions. Never commit these.
+data/
+
+# Written LoRA states (~10 MB each). These ARE the memories -- regenerable, and
+# they encode your transcripts. Keep them local.
+adapters/
+
+.venv/
+__pycache__/
+*.pyc
+repos.json
+.DS_Store
+.planning/
+results/

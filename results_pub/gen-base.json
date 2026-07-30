@@ -1,0 +1,38 @@
+{
+  "state": null,
+  "tracked": {
+    "label": "tracked (written)",
+    "n": 32,
+    "parseable": 0.0,
+    "tool_acc": 0.0,
+    "exact": 0.0,
+    "bash_f1": 0.0,
+    "n_bash": 23,
+    "secs": 98.28198504447937
+  },
+  "held": {
+    "label": "held (never written)",
+    "n": 32,
+    "parseable": 0.0,
+    "tool_acc": 0.0,
+    "exact": 0.0,
+    "bash_f1": 0.0,
+    "n_bash": 21,
+    "secs": 84.40960693359375
+  },
+  "config": {
+    "model": "mlx-community/Qwen3-1.7B-4bit",
+    "project": "repo-a",
+    "state": null,
+    "n": 400,
+    "n_probe": 32,
+    "n_held": 32,
+    "seed": 13,
+    "rank": 8,
+    "num_layers": 8,
+    "max_len": 512,
+    "max_tokens": 96,
+    "show": 8,
+    "name": "gen-base"
+  }
+}

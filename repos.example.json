@@ -1,0 +1,10 @@
+{
+  "repo-a": {
+    "cwd": "/Users/you/Desktop/repo-a",
+    "expect": ["bun", "bunx"]
+  },
+  "repo-b": {
+    "cwd": "/Users/you/Desktop/repo-b",
+    "expect": ["python3", "psql", "python"]
+  }
+}

@@ -1,0 +1,7 @@
+# Core: stateful model + writes (Apple Silicon / Metal)
+mlx>=0.32
+mlx-lm>=0.31
+
+# Retrieval baseline only. Needs torch, so it is deliberately kept out of the
+# mlx venv -- retrieve.py runs on a separate interpreter. See README.
+# sentence-transformers>=5.0

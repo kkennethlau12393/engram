@@ -1,0 +1,38 @@
+{
+  "state": "adapters/repo-a-400-gen.safetensors",
+  "tracked": {
+    "label": "tracked (written)",
+    "n": 32,
+    "parseable": 1.0,
+    "tool_acc": 0.84375,
+    "exact": 0.0625,
+    "bash_f1": 0.2142644384330193,
+    "n_bash": 23,
+    "secs": 100.09036993980408
+  },
+  "held": {
+    "label": "held (never written)",
+    "n": 32,
+    "parseable": 1.0,
+    "tool_acc": 0.71875,
+    "exact": 0.03125,
+    "bash_f1": 0.1545292254523869,
+    "n_bash": 21,
+    "secs": 97.98775720596313
+  },
+  "config": {
+    "model": "mlx-community/Qwen3-1.7B-4bit",
+    "project": "repo-a",
+    "state": "adapters/repo-a-400-gen.safetensors",
+    "n": 400,
+    "n_probe": 32,
+    "n_held": 32,
+    "seed": 13,
+    "rank": 8,
+    "num_layers": 8,
+    "max_len": 512,
+    "max_tokens": 96,
+    "show": 8,
+    "name": "gen-stateful"
+  }
+}
